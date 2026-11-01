@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Weather</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #dfe8ee; --ink: #14222c; --muted: #4d6270; --panel: rgba(255,255,255,.55);
+    --line: rgba(20,34,44,.18); --accent: #14222c; --bar: #14222c;
+  }
+  body[data-sky="clear-day"] { --bg: #f2d9a0; --ink: #2a1c05; --muted: #6b5426; --line: rgba(42,28,5,.2); --bar: #b4570d; }
+  body[data-sky="clear-night"] { --bg: #151d3b; --ink: #eef0ff; --muted: #a2abd6; --panel: rgba(255,255,255,.08); --line: rgba(238,240,255,.2); --bar: #f3d98a; }
+  body[data-sky="cloud"] { --bg: #cdd5db; --ink: #1c262e; --muted: #56646f; --bar: #3b4c59; }
+  body[data-sky="fog"] { --bg: #d9d9d4; --ink: #262622; --muted: #66665e; --bar: #55554c; }
+  body[data-sky="rain"] { --bg: #2f4a5c; --ink: #eaf3f8; --muted: #a8c2d1; --panel: rgba(255,255,255,.09); --line: rgba(234,243,248,.22); --bar: #8fd0f0; }
+  body[data-sky="snow"] { --bg: #eef3f7; --ink: #1b2a36; --muted: #5d7284; --bar: #3f78a6; }
+  body[data-sky="storm"] { --bg: #2a2438; --ink: #f0ecfa; --muted: #b3a9cf; --panel: rgba(255,255,255,.08); --line: rgba(240,236,250,.22); --bar: #ffd04d; }
+
+  * { box-sizing: border-box; }
+  html { scroll-padding-top: 1rem; }
+  body {
+    margin: 0; min-height: 100vh; background: var(--bg); color: var(--ink);
+    font-family: "Familjen Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+    transition: background-color .6s ease, color .6s ease;
+  }
+  main { max-width: 760px; margin: 0 auto; padding: 2rem 1.25rem 3rem; }
+
+  form { display: flex; gap: .5rem; flex-wrap: wrap; }
+  input[type=search] {
+    flex: 1 1 220px; font: inherit; font-size: 1.05rem; padding: .75rem 1rem;
+    border: 1.5px solid var(--line); border-radius: 10px; background: var(--panel); color: var(--ink);
+  }
+  input::placeholder { color: var(--muted); }
+  button {
+    font: inherit; font-weight: 600; padding: .75rem 1.25rem; border-radius: 10px; cursor: pointer;
+    border: 1.5px solid var(--ink); background: var(--ink); color: var(--bg);
+  }
+  button.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+  button:focus-visible, input:focus-visible { outline: 3px solid var(--bar); outline-offset: 2px; }
+
+  #status { margin: 1.5rem 0 0; color: var(--muted); min-height: 1.5em; }
+  #status.error { color: var(--ink); font-weight: 600; }
+
+  #result[hidden] { display: none; }
+  .place { margin: 2.5rem 0 0; font-size: 1.15rem; font-weight: 500; color: var(--muted); }
+  .temp { font-size: clamp(6rem, 24vw, 11rem); font-weight: 700; line-height: .9; letter-spacing: -.05em; margin: .25rem 0 0; }
+  .temp sup { font-size: .3em; font-weight: 500; letter-spacing: 0; vertical-align: top; position: relative; top: .3em; margin-left: .05em; }
+  .summary { font-size: 1.6rem; font-weight: 600; margin: .5rem 0 0; }
+
+  dl.facts { display: flex; flex-wrap: wrap; gap: 0; margin: 2rem 0 0; border-top: 1px solid var(--line); }
+  dl.facts div { flex: 1 1 33%; padding: 1rem 0; }
+  dl.facts dt { color: var(--muted); font-size: .95rem; }
+  dl.facts dd { margin: .15rem 0 0; font-size: 1.4rem; font-weight: 600; }
+
+  h2 { font-size: 1.1rem; margin: 2.25rem 0 .5rem; font-weight: 600; }
+  ol.days { list-style: none; margin: 0; padding: 0; }
+  ol.days li {
+    display: grid; grid-template-columns: 5.5rem 1fr 3rem; align-items: center; gap: .75rem 1rem;
+    padding: .85rem 0; border-top: 1px solid var(--line);
+  }
+  .day-name { font-weight: 600; }
+  .day-sum { display: block; font-weight: 400; color: var(--muted); font-size: .9rem; }
+  .range { display: grid; grid-template-columns: 2.5rem 1fr 2.5rem; align-items: center; gap: .6rem; font-variant-numeric: tabular-nums; }
+  .range .lo { text-align: right; color: var(--muted); }
+  .range .hi { font-weight: 600; }
+  .track { position: relative; height: 8px; border-radius: 4px; background: var(--line); }
+  .fill { position: absolute; top: 0; bottom: 0; border-radius: 4px; background: var(--bar); }
+  .rain { text-align: right; color: var(--muted); font-size: .95rem; }
+
+  @media (max-width: 520px) {
+    ol.days li { grid-template-columns: 4.5rem 1fr; }
+    .rain { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) { body { transition: none; } }
+</style>
+</head>
+<body data-sky="">
+<main>
+  <form id="search">
+    <input type="search" id="city" name="city" placeholder="City, e.g. Bhopal" aria-label="City" autocomplete="off" required autofocus>
+    <button type="submit">Get weather</button>
+    <button type="button" class="ghost" id="units" aria-label="Switch units">°C</button>
+  </form>
+
+  <p id="status" role="status" aria-live="polite">Search for a city to see its weather.</p>
+
+  <section id="result" hidden>
+    <p class="place" id="place"></p>
+    <p class="temp" id="temp"></p>
+    <p class="summary" id="summary"></p>
+    <dl class="facts">
+      <div><dt>Feels like</dt><dd id="feels"></dd></div>
+      <div><dt>Humidity</dt><dd id="humidity"></dd></div>
+      <div><dt>Wind</dt><dd id="wind"></dd></div>
+    </dl>
+    <h2>Next 5 days</h2>
+    <ol class="days" id="days"></ol>
+  </section>
+</main>
+
+<script>
+  const $ = id => document.getElementById(id);
+  let units = "metric";
+  let lastCity = "";
+
+  async function load(city) {
+    lastCity = city;
+    const status = $("status");
+    status.className = "";
+    status.textContent = "Loading…";
+    try {
+      const res = await fetch(`/api/weather?city=${encodeURIComponent(city)}&units=${units}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Something went wrong.");
+      render(data);
+      status.textContent = "";
+    } catch (err) {
+      status.className = "error";
+      status.textContent = err.message;
+    }
+  }
+
+  function render(d) {
+    const u = d.units, c = d.current;
+    document.body.dataset.sky = c.sky === "clear" ? (c.is_day ? "clear-day" : "clear-night") : c.sky;
+    $("place").textContent = [d.place.name, d.place.region, d.place.country].filter(Boolean).join(", ");
+    $("temp").innerHTML = `${c.temp}<sup>${u.temp}</sup>`;
+    $("summary").textContent = c.summary;
+    $("feels").textContent = `${c.feels_like}${u.temp}`;
+    $("humidity").textContent = `${c.humidity}%`;
+    $("wind").textContent = `${c.wind} ${u.wind}`;
+
+    // Shared scale so the range bars are comparable across days
+    const days = d.forecast.slice(1);
+    const min = Math.min(...days.map(x => x.low));
+    const max = Math.max(...days.map(x => x.high));
+    const span = Math.max(max - min, 1);
+
+    $("days").innerHTML = days.map(x => {
+      const left = ((x.low - min) / span) * 100;
+      const width = Math.max(((x.high - x.low) / span) * 100, 6);
+      const name = new Date(x.date + "T00:00").toLocaleDateString(undefined, { weekday: "long" });
+      return `<li>
+        <div class="day-name">${name}<span class="day-sum">${x.summary}</span></div>
+        <div class="range">
+          <span class="lo">${x.low}°</span>
+          <span class="track"><span class="fill" style="left:${left}%;width:${width}%"></span></span>
+          <span class="hi">${x.high}°</span>
+        </div>
+        <div class="rain">${x.rain_chance ?? 0}% rain</div>
+      </li>`;
+    }).join("");
+    $("result").hidden = false;
+  }
+
+  $("search").addEventListener("submit", e => {
+    e.preventDefault();
+    const city = $("city").value.trim();
+    if (city) load(city);
+  });
+
+  $("units").addEventListener("click", () => {
+    units = units === "metric" ? "imperial" : "metric";
+    $("units").textContent = units === "metric" ? "°C" : "°F";
+    if (lastCity) load(lastCity);
+  });
+</script>
+</body>
+</html>
