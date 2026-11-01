@@ -1,3 +1,15 @@
+# AWS private keys
+*.pem
+
+# Python files
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Environment variables and secrets
+.env
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
