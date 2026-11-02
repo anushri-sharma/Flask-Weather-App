@@ -266,6 +266,12 @@ Install Gunicorn using the below command:
 ```
 pip install gunicorn
 ```
+Gunicorn is running (Ctrl + C to exit gunicorn)!
+
+Use systemd to manage Gunicorn Systemd is a boot manager for Linux. We are using it to restart gunicorn if the EC2 restarts or reboots for some reason. We create a .service file in the /etc/systemd/system folder, and specify what would happen to gunicorn when the system reboots. We will be adding 3 parts to systemd Unit file — Unit, Service, Install
+
+Unit — This section is for description about the project and some dependencies Service — To specify user/group we want to run this service after. Also some information about the executables and the commands. Install — tells systemd at which moment during boot process this service should start. With that said, create an unit file in the /etc/systemd/system directory
+
 
 1. Create the service file:
    ```bash
@@ -288,7 +294,9 @@ pip install gunicorn
    WantedBy=multi-user.target
    ```
 3. Save and exit nano: press **Ctrl + O**, then **Enter**, then **Ctrl + X**.
-4. Start it and make it start on every reboot:
+
+4. (enable the service:)Start it and make it start on every reboot:
+
    ```bash
    sudo systemctl daemon-reload
    sudo systemctl start weather_app
@@ -297,9 +305,23 @@ pip install gunicorn
    ```
    You should see **active (running)** in green. Press **q** to leave the status screen.
 
+> Check if the app is running with
+
+```
+curl localhost:8000
+```
+
 ---
 
 ### Step 9: Set up Nginx (the front door)
+
+Run Nginx Webserver to accept and route request to Gunicorn Finally, we set up Nginx as a reverse-proxy to accept the requests from the user and route it to gunicorn.
+
+Install Nginx
+
+```
+sudo apt-get nginx
+```
 
 1. Create the Nginx config:
    ```bash
@@ -359,6 +381,7 @@ When you change your code:
    git pull
    source venv/bin/activate
    pip install -r requirements.txt     # only matters if you added packages
+
    sudo systemctl restart weather_app
    ```
 
@@ -399,10 +422,12 @@ Good to know:
 - **Your own domain name:** Buy a domain (Route 53 or any registrar), then point an **A record** at your
   server's Elastic IP. Change `server_name _;` in the Nginx file to `server_name yourdomain.com;`.
 - **HTTPS (the padlock):** With a domain pointing at your server, run:
-  ```bash
+
+   ```bash
   sudo apt install -y certbot python3-certbot-nginx
   sudo certbot --nginx -d yourdomain.com
   ```
+
   Also add an **HTTPS (port 443)** inbound rule to your security group.
 - **Easier hosting later:** AWS Elastic Beanstalk can run Flask apps with less manual setup. Doing it by hand
   first, as above, teaches you what is happening underneath.
