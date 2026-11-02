@@ -34,7 +34,7 @@ pip install -r requirements.txt
 python app.py
 ```
 
-Open http://127.0.0.1:5001 in your browser.
+Open http://127.0.0.1:5000 in your browser.
 
 > Port 5001 is used because macOS often uses port 5000 for AirPlay.
 
