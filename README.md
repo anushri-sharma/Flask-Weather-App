@@ -385,6 +385,9 @@ http://YOUR_PUBLIC_IP
 
 Use **http**, not https (HTTPS is an optional extra, see Step 14). Search for a city. You are live! 🎉
 
+<img width="1268" height="773" alt="image" src="https://github.com/user-attachments/assets/b31875ee-3b77-48be-9422-c4810d0cf34b" />
+
+
 ---
 
 ### Step 11: Updating your app later
