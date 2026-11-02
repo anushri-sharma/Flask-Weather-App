@@ -323,16 +323,31 @@ Install Nginx
 sudo apt-get nginx
 ```
 
+Start the Nginx service and go to the Public IP address of your EC2 on the browser to see the default nginx landing page
+
+```
+sudo systemctl start nginx
+sudo systemctl enable nginx
+
+```
+
 1. Create the Nginx config:
-   ```bash
+   Edit the default file in the sites-available folder.
+   
+   ```bash 
    sudo nano /etc/nginx/sites-available/weather_app
    ```
 2. Paste this in:
+   Add the following code at the top of the file (below the default comments)
    ```nginx
    server {
        listen 80;
        server_name _;
+   ```
 
+   Add a proxy_pass to flaskhelloworld atlocation /
+
+   ```nginx
        location / {
            proxy_pass http://127.0.0.1:8000;
            proxy_set_header Host $host;
@@ -352,6 +367,8 @@ sudo apt-get nginx
 5. Check for typos, then restart Nginx:
    ```bash
    sudo nginx -t
+
+   # restart Nginx
    sudo systemctl restart nginx
    ```
    `nginx -t` should print `syntax is ok` and `test is successful`.
