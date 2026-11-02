@@ -130,4 +130,5 @@ def weather():
 
 
 if __name__ == "__main__":
+    # debug=True is for local development only. On a server we use gunicorn instead.
     app.run(debug=True)
