@@ -237,6 +237,7 @@ On the server:
 cd ~/weather_app
 python3 -m venv venv
 source venv/bin/activate
+
 pip install -r requirements.txt
 ```
 
@@ -257,6 +258,14 @@ If you see `Listening at: http://127.0.0.1:8000`, it works. Press **Ctrl + C** t
 ### Step 8: Make the app run in the background (systemd)
 
 Right now the app stops when you close the terminal. We fix that by creating a **service**.
+
+Run Gunicorn WSGI server to serve the Flask Application When you “run” flask, you are actually running Werkzeug’s development WSGI server, which forward requests from a web server. Since Werkzeug is only for development, we have to use Gunicorn, which is a production-ready WSGI server, to serve our application.
+
+Install Gunicorn using the below command:
+
+```
+pip install gunicorn
+```
 
 1. Create the service file:
    ```bash
