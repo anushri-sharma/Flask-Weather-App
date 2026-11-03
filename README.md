@@ -471,7 +471,7 @@ Good to know:
 
 ---
 
-## Glossary for beginners
+## Glossary 
 
 - **AWS:** Amazon's cloud platform, where you rent computers and services.
 - **EC2:** AWS's "rent a virtual computer" service.
